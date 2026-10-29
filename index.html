@@ -611,6 +611,43 @@
   a.m-cta{ display:block; text-decoration:none; }
   .m-card:hover{ border-color: var(--line); box-shadow: 0 2px 10px rgba(22,21,26,.06); }
   .m-card:hover .m-cta{ background: var(--yellow); color: var(--ink); } a.m-cta:hover{ background: var(--ink) !important; color: var(--yellow) !important; }
+
+  /* ===== mobile layout ===== */
+  .m-specs, .slide-hint{ display:none; }
+  .m-specs h4{ font-family:'Assistant',sans-serif; font-weight:800; font-size: 18px; margin: 0 0 6px; }
+  .m-specs h4 bdi{ unicode-bidi:isolate; }
+  @media (max-width: 760px){
+    .models{ padding: 36px 0 40px; }
+    .models .wrap{ padding-inline: 0; }
+    .models h2, .models .cat-lead{ padding-inline: 20px; }
+    .slide-hint{ display:flex; align-items:center; gap: 10px; padding: 0 20px; margin: 0 0 12px; font-weight:800; font-size: 15px; }
+    .slide-hint span{ display:inline-flex; gap: 6px; } .slide-hint i{ width: 9px; height: 9px; border-radius:50%; background: rgba(22,21,26,.25); } .slide-hint i.on{ background: var(--ink); }
+    .m-grid{ display:flex; gap: 12px; overflow-x:auto; scroll-snap-type: x mandatory; padding: 4px 20px 16px; -webkit-overflow-scrolling: touch; align-items:flex-start; scrollbar-width:none; }
+    .m-grid::-webkit-scrollbar{ display:none; }
+    .m-item{ flex: 0 0 86%; scroll-snap-align: center; }
+    .m-specs{ display:block; background:#fff; border:1px solid var(--line); border-radius: 10px; padding: 14px 14px 6px; }
+    .m-specs .spec-table{ font-size: 14px; } .m-specs .spec-table th, .m-specs .spec-table td{ padding: 8px 4px; }
+    #specs{ display:none; }
+    /* hero: all labels visible under the machine */
+    .hero-stage{ display:flex; flex-wrap:wrap; justify-content:center; gap: 8px; width:100%; margin-top: 16px; }
+    .hero-stage .hero-machine{ flex: 0 0 100%; height: min(46vh, 380px); width:auto; margin: 0 auto 6px; }
+    .hero-stage .fl{ position: static !important; display:inline-block !important; font-size: 13px; padding: 7px 11px; }
+    .hero-stage .fl b{ font-size: 15px; }
+    .hero-stage .halo{ top: 36%; width: 130%; }
+    .c-hero-photo{ padding-top: 28px; padding-bottom: 22px; }
+    .tech .ring.r1{ top: 50%; }
+  }
+
+  @media (max-width: 760px){
+    .hero-stage .hero-machine{ height: min(34vh, 290px); margin-bottom: 2px; }
+    .c-hero-photo h1{ font-size: 27px; }
+    .c-hero-photo{ padding-top: 22px; }
+    .m-img{ aspect-ratio: 4/3; }
+    .m-img img{ padding: 12px; }
+    .m-top .m-body h3{ font-size: 20px; }
+    .m-price{ font-size: 24px; padding: 10px 12px; }
+  }
+  @media (max-width: 760px){ .c-hero-photo h1 .hl{ font-size: .82em; white-space: nowrap; padding: 2px 12px 5px; } }
 </style>
 </head>
 <body>
@@ -660,6 +697,7 @@
   <div class="wrap">
     <h2>בחרו מכונה</h2>
     <p class="cat-lead">מחיר חבילה מלא: מכונה, הצבה, התקנה ומשלוח. לחצו לפרטים והצעת מחיר.</p>
+    <p class="slide-hint" id="slideHint" aria-hidden="true">החליקו הצידה לדגם השני <span><i class="on"></i><i></i></span></p>
     <div class="m-grid" id="modelGrid"></div>
   </div>
 </section>
@@ -924,8 +962,20 @@ var MODELS = [
       '<h3><bdi dir="ltr">' + esc(m.brand + ' ' + m.name) + '</bdi></h3></div>' +
       '<div class="m-price">' + priceHtml(m) + '</div></button>' +
       '<a class="m-cta" href="' + waBuy(m) + '" target="_blank" rel="noopener">לרכישה ותיאום לחץ כאן ←</a></div>' +
-      '<button type="button" class="m-pdf" data-pdf="' + esc(m.id) + '">▶ מצגת היצרן</button></div>';
+      '<button type="button" class="m-pdf" data-pdf="' + esc(m.id) + '">▶ מצגת היצרן</button>' +
+      '<div class="m-specs"><h4>מפרט: <bdi dir="ltr">' + esc(m.name) + '</bdi></h4>' + specTable(m) + '</div></div>';
   }).join('');
+  (function(){
+    var g = document.getElementById('modelGrid'), hint = document.getElementById('slideHint');
+    if(!g || !hint) return;
+    function upd(){
+      var items = g.children, w = g.clientWidth, cur = 0, best = 1e9;
+      for(var i = 0; i < items.length; i++){ var r = items[i].getBoundingClientRect(), gr = g.getBoundingClientRect(); var d = Math.abs((r.left + r.width/2) - (gr.left + gr.width/2)); if(d < best){ best = d; cur = i; } }
+      hint.setAttribute('data-cur', cur);
+      [].slice.call(hint.querySelectorAll('i')).forEach(function(d,i){ d.className = i === cur ? 'on' : ''; });
+    }
+    g.addEventListener('scroll', function(){ window.requestAnimationFrame(upd); }, {passive:true}); upd();
+  })();
 
   /* ---------- specs on home ---------- */
   document.getElementById('specGrid').innerHTML = MODELS.map(function(m){
